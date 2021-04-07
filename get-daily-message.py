@@ -1,7 +1,6 @@
 import os
 import requests
 from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil.rrule import rrule, DAILY
@@ -22,7 +21,6 @@ url = "https://mops.twse.com.tw/mops/web/ajax_t05st02"
 
 
 def get_response(date):
-
     year = date.year - 1911
     month = date.month
     day = date.day
@@ -43,7 +41,6 @@ def get_response(date):
     retry_time = 0
     while retry_time < 10:
         session = requests.Session()
-        retry = Retry(total=10, backoff_factor=1)
         adapter = HTTPAdapter(max_retries=5)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
