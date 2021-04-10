@@ -2,6 +2,7 @@ import os
 import requests
 from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
+from urllib.parse import quote
 from datetime import datetime
 from dateutil.rrule import rrule, DAILY
 import time
@@ -12,10 +13,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGO_URL = os.getenv("MONGO_URL")
+MONGO_URL = os.environ.get("MONGO_URL")
+SINCE_DATE = os.environ.get("SINCE_DATE")
+UNTIL_DATE = os.environ.get("UNTIL_DATE")
 
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.get_default_database()
+
+if SINCE_DATE:
+    since_date = datetime.strptime(SINCE_DATE, "%Y-%m-%d")
+else:
+    latest_msg = db.company_daily_messages.find_one({}, sort=[("date", -1)])
+    since_date = latest_msg["date"]
+
+if UNTIL_DATE:
+    until_date = datetime.strptime(UNTIL_DATE, "%Y-%m-%d")
+else:
+    until_date = datetime.now()
+
+print(f"since_date: {since_date}")
+print(f"until_date: {until_date}")
 
 url = "https://mops.twse.com.tw/mops/web/ajax_t05st02"
 
@@ -65,12 +82,39 @@ def get_company_messages(date):
     for tr in soup.find("form", {"action": "/mops/web/ajax_t05st02"}).find_all("tr"):
         tds = tr.find_all("td")
         if tds:
+            inputs = tds[5].find_all("input")
+
+            onclick_val = tds[5].find("input", onclick=True)["onclick"]
+            if "sii" in onclick_val:
+                typek = "sii"
+            elif "rotc" in onclick_val:
+                typek = "rotc"
+            elif "otc" in onclick_val:
+                typek = "otc"
+            elif "pub" in onclick_val:
+                continue
+            else:
+                print("get strange typek")
+                print(onclick_val)
+                continue
+
             row = [td.text.strip().replace("\r\n", "") for td in tds]
 
             date_str, time, code, name, title, _ = row
+            date_str = str(int(date_str[:3]) + 1911) + date_str[3:]
+            date = datetime.strptime(date_str, "%Y/%m/%d")
 
-            date = datetime.strptime(
-                str(int(date_str[:3]) + 1911) + date_str[3:], "%Y/%m/%d"
+            url = (
+                "https://mops.twse.com.tw/mops/web/t05st02?"
+                "step=1&off=1&firstin=1&"
+                f"TYPEK={typek}&i=1&"
+                f"h10={quote(inputs[0]['value'])}&"
+                f"h11={quote(inputs[1]['value'])}&"
+                f"h12={quote(inputs[2]['value'])}&"
+                f"h13={quote(inputs[3]['value'])}&"
+                f"h14={quote(inputs[4]['value'])}&"
+                f"h15={quote(inputs[5]['value'])}&"
+                "pgname=t05st02"
             )
 
             company_msg.append(
@@ -80,23 +124,20 @@ def get_company_messages(date):
                     "company_code": code,
                     "company_name": name,
                     "title": title,
+                    "typek": typek,
+                    "url": url,
                 }
             )
 
     return company_msg
 
 
-latest_msg = db.company_daily_messages.find_one({}, sort=[("date", -1)])
-latest_date = latest_msg["date"]
-
-today = datetime.now()
-
 dates = [
     dt
     for dt in rrule(
         DAILY,
-        dtstart=latest_date,
-        until=today,
+        dtstart=since_date,
+        until=until_date,
     )
 ]
 
