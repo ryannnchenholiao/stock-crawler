@@ -24,7 +24,10 @@ if SINCE_DATE:
     since_date = datetime.strptime(SINCE_DATE, "%Y-%m-%d")
 else:
     latest_msg = db.company_daily_messages.find_one({}, sort=[("date", -1)])
-    since_date = latest_msg["date"]
+    if latest_msg:
+        since_date = latest_msg["date"]
+    else:
+        since_date = datetime.now()
 
 if UNTIL_DATE:
     until_date = datetime.strptime(UNTIL_DATE, "%Y-%m-%d")
@@ -155,6 +158,6 @@ for date in dates:
             upsert=True,
         )
 
-    time.sleep(1)
+    time.sleep(3)
 
 mongo_client.close()
