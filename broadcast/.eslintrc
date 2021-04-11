@@ -1,0 +1,31 @@
+{
+  "parser": "babel-eslint",
+  "extends": [
+    "eslint:recommended",
+    "airbnb",
+    "prettier"
+  ],
+  "env": {
+    "node": true,
+    "jest": true,
+  },
+  "rules": {
+    "arrow-parens": "off",
+    "consistent-return": "off",
+    "jsx-a11y/href-no-hash": "off",
+    "jsx-a11y/anchor-is-valid": ["warn", { "aspects": ["invalidHref"] }],
+    "import/no-dynamic-require": "off",
+    "no-underscore-dangle": "off",
+    "prettier/prettier": [
+      "error",
+      {
+        trailingComma: 'es5',
+        singleQuote: true,
+      }
+    ]
+  },
+  "plugins": [
+    "babel",
+    "prettier"
+  ]
+}
