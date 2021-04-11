@@ -31,14 +31,18 @@ const main = async () => {
     .find({
       date: { $gte: subDays(todayDate, 3) },
       title: { $regex: '(?=.*處分)(?!.*存款)(?!.*理財).*' },
+      typek: { $ne: 'rotc' },
     })
+    .sort({ date: -1 })
     .toArray();
 
   const messages = dailyMessages.map((msg) => {
     const title =
-      `title: ${msg.title}\n` +
-      `date: ${format(msg.date, 'yyyy-MM-dd')}\n` +
-      `time: ${msg.time}`;
+      `date: ${format(msg.date, 'yyyy-MM-dd')} ${msg.time}\n` +
+      `code: ${msg.company_code}\n` +
+      `name: ${msg.company_name}\n` +
+      `typek: ${msg.typek}\n` +
+      `title: ${msg.title}\n`;
 
     return {
       title,
@@ -48,7 +52,7 @@ const main = async () => {
           inline_keyboard: [
             [
               {
-                text: `${msg.company_name} ${msg.company_code}, ${msg.typek}`,
+                text: `${msg.company_name}`,
                 url: msg.url,
               },
             ],
@@ -58,13 +62,20 @@ const main = async () => {
     };
   });
 
-  await pMap(
-    messages,
-    async (message) => {
-      await bot.sendMessage(userId, message.title, message.option);
-    },
-    { concurrency: 1 }
-  );
+  if (messages.length > 0) {
+    await pMap(
+      messages,
+      async (message) => {
+        await bot.sendMessage(userId, message.title, message.option);
+      },
+      { concurrency: 1 }
+    );
+  } else {
+    await bot.sendMessage(
+      userId,
+      `date: ${format(todayDate, 'yyyy-MM-dd')} has no messages`
+    );
+  }
 };
 
 main()
