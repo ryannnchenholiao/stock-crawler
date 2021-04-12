@@ -1,0 +1,10 @@
+**/.git*
+**/*.md
+**/__tests__
+**/__fixtures__
+**/.eslint*
+
+node_modules
+
+coverage-unit
+coverage-integration-*

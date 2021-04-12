@@ -26,11 +26,42 @@ const main = async () => {
     Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
   );
 
+  const excludeBigCompanyCode = [
+    '1101',
+    '1310',
+    '2207',
+    '2303',
+    '2317',
+    '2323',
+    '2324',
+    '2330',
+    '2347',
+    '2356',
+    '2412',
+    '2610',
+    '2612',
+    '2881',
+    '2882',
+    '2883',
+    '2885',
+    '2888',
+    '2891',
+    '4904',
+    '5215',
+    '5522',
+    '6219',
+    '6592',
+    '9904',
+    '9945',
+  ];
+
   const dailyMessages = await db
     .collection('company_daily_messages')
     .find({
-      date: { $gte: subDays(todayDate, 3) },
+      // date: { $gte: new Date(2021, 0, 1), $lte: new Date(2021, 2, 1) },
+      date: { $gte: subDays(todayDate, 2) },
       title: { $regex: '(?=.*處分)(?!.*存款)(?!.*理財).*' },
+      company_code: { $nin: excludeBigCompanyCode },
       typek: { $ne: 'rotc' },
     })
     .sort({ date: -1 })

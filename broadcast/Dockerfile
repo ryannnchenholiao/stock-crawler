@@ -2,14 +2,11 @@ FROM node:12
 
 WORKDIR /home/app
 
-COPY ./src ./src
-COPY ./package.json ./package.json
-COPY ./yarn.lock ./yarn.lock
-COPY ./index.js ./index.js
+COPY package.json yarn.lock ./
+
+COPY . .
 
 RUN yarn
 
-EXPOSE 5000
-
-CMD ["yarn", "start"]
+CMD ["yarn", "broadcast"]
 
