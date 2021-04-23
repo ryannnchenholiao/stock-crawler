@@ -12,7 +12,7 @@ const pMap = require('p-map');
 const getDatabase = require('./database');
 
 const botToken = process.env.BOT_TOKEN;
-const userId = process.env.USER_ID;
+const userIds = process.env.USER_IDS.split(',');
 
 const bot = new TelegramClient({
   accessToken: botToken,
@@ -44,11 +44,13 @@ const main = async () => {
     '2882',
     '2883',
     '2885',
+    '2887',
     '2888',
     '2891',
     '4904',
     '5215',
     '5522',
+    '5880',
     '6219',
     '6592',
     '9904',
@@ -60,7 +62,10 @@ const main = async () => {
     .find({
       // date: { $gte: new Date(2021, 0, 1), $lte: new Date(2021, 2, 1) },
       date: { $gte: subDays(todayDate, 2) },
-      title: { $regex: '(?=.*處分)(?!.*存款)(?!.*理財).*' },
+      title: {
+        $regex:
+          '((?=.*處分)(?!.*存款)(?!.*理財).*|注意交易資訊標準|減資|股利|合併財報)',
+      },
       company_code: { $nin: excludeBigCompanyCode },
       typek: { $ne: 'rotc' },
     })
@@ -97,15 +102,19 @@ const main = async () => {
     await pMap(
       messages,
       async (message) => {
-        await bot.sendMessage(userId, message.title, message.option);
+        await pMap(userIds, async (userId) => {
+          await bot.sendMessage(userId, message.title, message.option);
+        });
       },
       { concurrency: 1 }
     );
   } else {
-    await bot.sendMessage(
-      userId,
-      `date: ${format(todayDate, 'yyyy-MM-dd')} has no messages`
-    );
+    await pMap(userIds, async (userId) => {
+      await bot.sendMessage(
+        userId,
+        `date: ${format(todayDate, 'yyyy-MM-dd')} has no messages`
+      );
+    });
   }
 };
 

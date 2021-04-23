@@ -4,9 +4,9 @@ WORKDIR /home/app
 
 COPY package.json yarn.lock ./
 
-COPY . .
-
 RUN yarn
+
+COPY . .
 
 CMD ["yarn", "broadcast"]
 
