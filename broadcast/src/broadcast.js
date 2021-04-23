@@ -64,12 +64,12 @@ const main = async () => {
       date: { $gte: subDays(todayDate, 2) },
       title: {
         $regex:
-          '((?=.*處分)(?!.*存款)(?!.*理財).*|注意交易資訊標準|減資|股利|合併財報)',
+          '((?=.*處分)(?!.*存款)(?!.*理財).*|注意交易資訊標準|減資|股利|合併財報|處置)',
       },
       company_code: { $nin: excludeBigCompanyCode },
       typek: { $ne: 'rotc' },
     })
-    .sort({ date: -1 })
+    .sort({ date: -1, time: -1 })
     .toArray();
 
   const messages = dailyMessages.map((msg) => {
