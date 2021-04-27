@@ -64,7 +64,7 @@ const main = async () => {
       date: { $gte: subDays(todayDate, 2) },
       title: {
         $regex:
-          '((?=.*處分)(?!.*存款)(?!.*理財).*|注意交易資訊標準|減資|股利|合併財報|處置)',
+          '((?=.*處分)(?!.*存款)(?!.*理財).*|注意交易資訊標準|減資|股利|合併財報|處置|出售)',
       },
       company_code: { $nin: excludeBigCompanyCode },
       typek: { $ne: 'rotc' },
