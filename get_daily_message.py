@@ -1,14 +1,12 @@
 import os
 import requests
+import time
 from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 from urllib.parse import quote
 from datetime import datetime
 from dateutil.rrule import rrule, DAILY
-import time
-
 from pymongo import MongoClient
-
 from dotenv import load_dotenv
 
 load_dotenv()
