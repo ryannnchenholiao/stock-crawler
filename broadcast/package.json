@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": false,
   "scripts": {
-    "broadcast": "node src/broadcast"
+    "broadcast": "NODE_ENV=production node src/broadcast",
+    "broadcast:dev": "NODE_ENV=development node src/broadcast"
   },
   "engines": {
     "node": ">=12"

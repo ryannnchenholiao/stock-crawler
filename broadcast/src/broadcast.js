@@ -10,9 +10,11 @@ const format = require('date-fns/format');
 const pMap = require('p-map');
 
 const getDatabase = require('./database');
+const excludeBigCompanyCode = require('./excludeBigCompanyCode');
 
 const botToken = process.env.BOT_TOKEN;
 const userIds = process.env.USER_IDS.split(',');
+const env = process.env.NODE_ENV;
 
 const bot = new TelegramClient({
   accessToken: botToken,
@@ -25,37 +27,6 @@ const main = async () => {
   const todayDate = new Date(
     Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
   );
-
-  const excludeBigCompanyCode = [
-    '1101',
-    '1310',
-    '2207',
-    '2303',
-    '2317',
-    '2323',
-    '2324',
-    '2330',
-    '2347',
-    '2356',
-    '2412',
-    '2610',
-    '2612',
-    '2881',
-    '2882',
-    '2883',
-    '2885',
-    '2887',
-    '2888',
-    '2891',
-    '4904',
-    '5215',
-    '5522',
-    '5880',
-    '6219',
-    '6592',
-    '9904',
-    '9945',
-  ];
 
   const dailyMessages = await db
     .collection('company_daily_messages')
@@ -103,7 +74,15 @@ const main = async () => {
       messages,
       async (message) => {
         await pMap(userIds, async (userId) => {
-          await bot.sendMessage(userId, message.title, message.option);
+          if (env === 'production') {
+            await bot.sendMessage(userId, message.title, message.option);
+          } else {
+            console.log(`send message to user: ${userId}`);
+            console.log({
+              title: message.title,
+              option: message.option,
+            });
+          }
         });
       },
       { concurrency: 1 }
