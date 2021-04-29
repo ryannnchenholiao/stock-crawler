@@ -4,7 +4,7 @@ import json
 import time
 from requests.adapters import HTTPAdapter
 from datetime import datetime, timedelta
-from dateutil.rrule import rrule, WEEKLY
+from dateutil.rrule import rrule, WEEKLY, MO
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -29,10 +29,9 @@ else:
 
 if UNTIL_DATE:
     until_date = datetime.strptime(UNTIL_DATE, "%Y-%m-%d")
+    if until_date > datetime.now():
+        until_date = datetime.now()
 else:
-    until_date = datetime.now()
-
-if until_date > datetime.now():
     until_date = datetime.now()
 
 if not WANTGOO_MEMBER_TOKEN:
@@ -85,12 +84,13 @@ def get_stock_chips(company_code, since_date, until_date):
             WEEKLY,
             dtstart=since_date,
             until=until_date,
+            byweekday=[MO],
         )
     ]
 
     for since in mondays:
         print(f"date: {since}")
-        until = since + timedelta(days=5)
+        until = since + timedelta(days=4)
 
         if until > datetime.now():
             print(f'until date {until} is greater than today, skip')
