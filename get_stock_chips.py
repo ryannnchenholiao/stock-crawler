@@ -18,10 +18,11 @@ COMPANY_CODES = os.environ.get("COMPANY_CODES")
 
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.get_default_database()
-since_date = None
 
-if SINCE_DATE:
-    since_date = datetime.strptime(SINCE_DATE, "%Y-%m-%d")
+if not SINCE_DATE:
+    raise ValueError(SINCE_DATE, "can not get SINCE_DATE")
+
+since_date = datetime.strptime(SINCE_DATE, "%Y-%m-%d")
 
 if UNTIL_DATE:
     until_date = datetime.strptime(UNTIL_DATE, "%Y-%m-%d")
@@ -107,19 +108,29 @@ def get_stock_chips(company_code, since_date, until_date):
         time.sleep(3)
 
 
+existed_company_codes = db.list_collection_names(
+    filter={"name": {"$regex": "^\\d\\d\\d\\d$"}}
+)
+
 for company_code in company_codes:
-    if not since_date:
-        latest_data = db[company_code].find_one({}, sort=[("sinceDate", -1)])
-
-        if latest_data:
-            since_date = latest_data["sinceDate"]
-        else:
-            raise ValueError(since_date, "can not get SINCE_DATE")
-
     print(f"since_date: {since_date}")
     print(f"until_date: {until_date}")
     print(f"company_code: {company_code}")
 
+    if company_code in existed_company_codes:
+        print(f"company_code {company_code} collection already exists, skip")
+        continue
+
     get_stock_chips(company_code, since_date, until_date)
+
+
+for existed_code in existed_company_codes:
+    latest_data = db[existed_code].find_one({}, sort=[("sinceDate", -1)])
+    since_date = latest_data["sinceDate"]
+    print(f"since_date: {since_date}")
+    print(f"until_date: {until_date}")
+    print(f"existed_company_code: {existed_code}")
+
+    get_stock_chips(existed_code, since_date, until_date)
 
 mongo_client.close()
