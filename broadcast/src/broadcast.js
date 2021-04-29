@@ -8,6 +8,7 @@ const { TelegramClient } = require('messaging-api-telegram');
 const subDays = require('date-fns/subDays');
 const format = require('date-fns/format');
 const pMap = require('p-map');
+const delay = require('delay');
 
 const getDatabase = require('./database');
 const excludeBigCompanyCode = require('./excludeBigCompanyCode');
@@ -76,6 +77,7 @@ const main = async () => {
         await pMap(userIds, async (userId) => {
           if (env === 'production') {
             await bot.sendMessage(userId, message.title, message.option);
+            await delay(3000);
           } else {
             console.log(`send message to user: ${userId}`);
             console.log({
