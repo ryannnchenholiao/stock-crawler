@@ -47,7 +47,7 @@ const main = async () => {
     const title =
       `date: ${format(msg.date, 'yyyy-MM-dd')} ${msg.time}\n` +
       `code: ${msg.company_code}\n` +
-      `name: ${msg.company_name}\n` +
+      `name: ${msg.company_name.replace('*', '')}\n` +
       `typek: ${msg.typek}\n` +
       `title: ${msg.title}\n`;
 
