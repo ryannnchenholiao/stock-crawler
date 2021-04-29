@@ -14,18 +14,14 @@ MONGO_URL = os.environ.get("MONGO_URL")
 SINCE_DATE = os.environ.get("SINCE_DATE")
 UNTIL_DATE = os.environ.get("UNTIL_DATE")
 WANTGOO_MEMBER_TOKEN = os.environ.get("WANTGOO_MEMBER_TOKEN")
+COMPANY_CODES = os.environ.get("COMPANY_CODES")
 
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.get_default_database()
+since_date = None
 
 if SINCE_DATE:
     since_date = datetime.strptime(SINCE_DATE, "%Y-%m-%d")
-else:
-    latest_msg = db.company_daily_messages.find_one({}, sort=[("date", -1)])
-    if latest_msg:
-        since_date = latest_msg["date"]
-    else:
-        since_date = datetime.now()
 
 if UNTIL_DATE:
     until_date = datetime.strptime(UNTIL_DATE, "%Y-%m-%d")
@@ -35,13 +31,14 @@ else:
     until_date = datetime.now()
 
 if not WANTGOO_MEMBER_TOKEN:
-    raise ValueError(WANTGOO_MEMBER_TOKEN, 'WANTGOO_MEMBER_TOKEN is missing')
-
-print(f"since_date: {since_date}")
-print(f"until_date: {until_date}")
-
+    raise ValueError(WANTGOO_MEMBER_TOKEN, "WANTGOO_MEMBER_TOKEN is missing")
 
 cookie = f"member_token={WANTGOO_MEMBER_TOKEN}"
+
+if not COMPANY_CODES:
+    raise ValueError(COMPANY_CODES, "COMPANY_CODES is missing")
+
+company_codes = COMPANY_CODES.split(",")
 
 
 def crawl_stock_date_chips(company_code, since_date, until_date):
@@ -89,11 +86,11 @@ def get_stock_chips(company_code, since_date, until_date):
     ]
 
     for since in mondays:
-        print(f"date: {since}")
         until = since + timedelta(days=4)
+        print(f"date range: {since} ~ {until}")
 
-        if until > datetime.now():
-            print(f'until date {until} is greater than today, skip')
+        if until.date() >= datetime.now().date():
+            print(f"until date {until} is gte today, skip")
             break
 
         chips = crawl_stock_date_chips(company_code, since, until)
@@ -110,8 +107,19 @@ def get_stock_chips(company_code, since_date, until_date):
         time.sleep(3)
 
 
-company_code = "4930"
+for company_code in company_codes:
+    if not since_date:
+        latest_data = db[company_code].find_one({}, sort=[("sinceDate", -1)])
 
-company_msg = get_stock_chips(company_code, since_date, until_date)
+        if latest_data:
+            since_date = latest_data["sinceDate"]
+        else:
+            raise ValueError(since_date, "can not get SINCE_DATE")
+
+    print(f"since_date: {since_date}")
+    print(f"until_date: {until_date}")
+    print(f"company_code: {company_code}")
+
+    get_stock_chips(company_code, since_date, until_date)
 
 mongo_client.close()
