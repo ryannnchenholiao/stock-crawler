@@ -15,6 +15,7 @@ SINCE_DATE = os.environ.get("SINCE_DATE")
 UNTIL_DATE = os.environ.get("UNTIL_DATE")
 WANTGOO_MEMBER_TOKEN = os.environ.get("WANTGOO_MEMBER_TOKEN")
 COMPANY_CODES = os.environ.get("COMPANY_CODES")
+UPDATE_EXISTED_COMPANY = os.environ.get("UPDATE_EXISTED_COMPANY")
 
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.get_default_database()
@@ -123,14 +124,14 @@ for company_code in company_codes:
 
     get_stock_chips(company_code, since_date, until_date)
 
+if UPDATE_EXISTED_COMPANY:
+    for existed_code in existed_company_codes:
+        latest_data = db[existed_code].find_one({}, sort=[("sinceDate", -1)])
+        since_date = latest_data["sinceDate"]
+        print(f"since_date: {since_date}")
+        print(f"until_date: {until_date}")
+        print(f"existed_company_code: {existed_code}")
 
-for existed_code in existed_company_codes:
-    latest_data = db[existed_code].find_one({}, sort=[("sinceDate", -1)])
-    since_date = latest_data["sinceDate"]
-    print(f"since_date: {since_date}")
-    print(f"until_date: {until_date}")
-    print(f"existed_company_code: {existed_code}")
-
-    get_stock_chips(existed_code, since_date, until_date)
+        get_stock_chips(existed_code, since_date, until_date)
 
 mongo_client.close()
