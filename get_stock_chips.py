@@ -65,10 +65,10 @@ def get_date_range():
         until_date = datetime.now()
 
     if not DATE_INTERVAL:
-        date_interval = 5
+        date_interval = 7
     else:
         date_interval = int(DATE_INTERVAL)
-        if date_interval < 0:
+        if date_interval < 1:
             raise ValueError(date_interval, 'Invalid date_interval')
 
     return since_date, until_date, date_interval
@@ -107,7 +107,7 @@ def crawl_stock_date_chips(company_code, since_date, until_date):
 def get_stock_chips(company_code, since_date, until_date, date_interval):
 
     dates = [dt for dt in rrule(DAILY, dtstart=since_date, until=until_date)]
-    dates = dates[0:: date_interval + 1]
+    dates = dates[0:: date_interval]
 
     if not SAVE_MONGO:
         all_chips = []
@@ -115,7 +115,7 @@ def get_stock_chips(company_code, since_date, until_date, date_interval):
     for date in dates:
 
         since = date
-        until = date + timedelta(days=date_interval)
+        until = date + timedelta(days=date_interval - 1)
 
         if since == until and since.weekday() in [5, 6]:
             print(f'since date and until date {since} are weekend, skip')
