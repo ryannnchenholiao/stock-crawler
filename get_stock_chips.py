@@ -12,6 +12,7 @@ import time
 
 load_dotenv()
 SAVE_MONGO = os.environ.get('SAVE_MONGO') == 'true'
+FORCE_UPDATE = False
 
 # mongo settings
 if SAVE_MONGO:
@@ -128,6 +129,21 @@ def get_stock_chips(company_code, since_date, until_date, date_interval):
             until = until_date
 
         print(f'Now processing date: {since} to {until}')
+
+        if SAVE_MONGO and not FORCE_UPDATE:
+            check = db[company_code].find_one(
+                {
+                    'sinceDate': since,
+                    'untilDate': until,
+                }
+            )
+            if check is not None:
+                print('{0}_{1}_{2}_chips found in db'.format(
+                    company_code,
+                    since.strftime('%Y%m%d'),
+                    until.strftime('%Y%m%d')
+                ))
+                continue
 
         chips = crawl_stock_date_chips(company_code, since, until)
 
