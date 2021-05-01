@@ -1,9 +1,10 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 from dateutil.rrule import rrule, DAILY
 from dotenv import load_dotenv
 import json
 import os
-# import pandas as pd
+import pandas as pd
 from pymongo import MongoClient
 import random
 import requests
@@ -147,9 +148,28 @@ def get_stock_chips(company_code, since_date, until_date, date_interval):
         time.sleep(random_num())
 
     if not SAVE_MONGO:
-        import pickle
-        with open('./crawled-chips/tmp.pkl', 'wb') as f:
-            pickle.dump(all_chips, f)
+
+        all_data = defaultdict(list)
+        for data_info in all_chips:
+            tmp_since_date = data_info['sinceDate'].strftime('%Y-%m-%d')
+            tmp_until_date = data_info['untilDate'].strftime('%Y-%m-%d')
+            for datum in data_info['data']:
+                all_data['agentId'].append(datum['agentId'])
+                all_data['agentName'].append(datum['agentName'])
+                all_data['buyQuantities'].append(datum['buyQuantities'])
+                all_data['sellQuantities'].append(datum['sellQuantities'])
+                all_data['buyPriceAvg'].append(datum['buyPriceAvg'])
+                all_data['sellPriceAvg'].append(datum['sellPriceAvg'])
+                all_data['sinceDate'].append(tmp_since_date)
+                all_data['untilDate'].append(tmp_until_date)
+
+        df = pd.DataFrame.from_dict(all_data)
+        output_file_name = './data/crawled-chips/{0}_{1}_{2}_chips.csv'.format(
+            company_code,
+            since_date.strftime('%Y%m%d'),
+            until_date.strftime('%Y%m%d')
+        )
+        df.to_csv(output_file_name)
 
     return
 
