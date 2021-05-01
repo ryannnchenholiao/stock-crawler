@@ -7,15 +7,23 @@ load_dotenv()
 
 MONGO_URL = os.environ.get("MONGO_URL")
 COMPANY_CODE = os.environ.get("COMPANY_CODE")
-WEEKLY_THRESHOLD = os.environ.get("WEEKLY_THRESHOLD", "10")
-TOTAL_THRESHOLD = os.environ.get("TOTAL_THRESHOLD", "100")
+WEEKLY_THRESHOLD = os.environ.get("WEEKLY_THRESHOLD")
+TOTAL_THRESHOLD = os.environ.get("TOTAL_THRESHOLD")
 
 if not COMPANY_CODE:
     raise ValueError(COMPANY_CODE, "COMPANY_CODE is missing")
 
 company_code = COMPANY_CODE
-weekly_big_trader_threshold = int(WEEKLY_THRESHOLD)
-total_big_trader_threshold = int(TOTAL_THRESHOLD)
+
+if WEEKLY_THRESHOLD:
+    weekly_big_trader_threshold = int(WEEKLY_THRESHOLD)
+else:
+    weekly_big_trader_threshold = 10
+
+if TOTAL_THRESHOLD:
+    total_big_trader_threshold = int(TOTAL_THRESHOLD)
+else:
+    total_big_trader_threshold = 100
 
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.get_default_database()
