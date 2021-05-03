@@ -1,6 +1,7 @@
 import os
 from pymongo import MongoClient
 import pandas as pd
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -64,7 +65,7 @@ weekly_trades_df = pd.DataFrame(
 cusum_trades_df = weekly_trades_df.fillna(0).cumsum()
 
 # filter columns according to last row value
-big_trader_filter = cusum_trades_df[-1:].squeeze() > total_big_trader_threshold
+big_trader_filter = abs(cusum_trades_df[-1:].squeeze()) > total_big_trader_threshold
 
 big_trades_df = cusum_trades_df.loc[:, big_trader_filter]
 
@@ -75,3 +76,18 @@ big_trades_df = big_trades_df.sort_values(
 )
 
 print(big_trades_df.to_markdown())
+
+# from matplotlib import font_manager
+# font_set = {f.name for f in font_manager.fontManager.ttflist}
+plt.rcParams["font.sans-serif"] = "Noto Sans CJK JP"
+
+ax = big_trades_df.plot(figsize=(20, 10), fontsize=15, style="o-", grid=True, legend=2)
+ax.set_title(
+    f"{company_code} (threshold: {weekly_big_trader_threshold}, {total_big_trader_threshold})",
+    fontsize=30,
+)
+ax.set_xlabel("date", fontsize=20)
+ax.set_ylabel("count", fontsize=20)
+ax.legend(loc="upper left")
+
+plt.show()
