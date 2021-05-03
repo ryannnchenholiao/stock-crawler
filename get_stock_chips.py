@@ -112,7 +112,7 @@ def get_stock_chips(company_code, since_date, until_date, date_interval):
 
         chips = crawl_stock_date_chips(company_code, since, until)
 
-        db[company_code].update_one(
+        db[f"company_{company_code}"].update_one(
             {
                 "sinceDate": chips["sinceDate"],
                 "untilDate": chips["untilDate"],
@@ -129,7 +129,7 @@ def main():
     since_date, until_date, date_interval = get_date_range()
 
     existed_company_codes = db.list_collection_names(
-        filter={"name": {"$regex": "^\\d\\d\\d\\d$"}}
+        filter={"name": {"$regex": "^company_\\d\\d\\d\\d$"}}
     )
 
     for company_code in company_codes:
@@ -137,7 +137,7 @@ def main():
         print(f"until_date: {until_date}")
         print(f"company_code: {company_code}")
 
-        if company_code in existed_company_codes:
+        if f"company_{company_code}" in existed_company_codes:
             print(f"company_code {company_code} collection already exists, skip")
             continue
 
