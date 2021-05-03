@@ -4,7 +4,7 @@ import json
 import time
 from requests.adapters import HTTPAdapter
 from datetime import datetime, timedelta
-from dateutil.rrule import rrule, WEEKLY, MO
+from dateutil.rrule import rrule, DAILY
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -33,11 +33,20 @@ def get_date_range():
 
     SINCE_DATE = os.environ.get('SINCE_DATE')
     UNTIL_DATE = os.environ.get('UNTIL_DATE')
+    DATE_INTERVAL = os.environ.get('DATE_INTERVAL')
+
+    if not DATE_INTERVAL:
+        date_interval = 7
+    else:
+        date_interval = int(DATE_INTERVAL)
+        if date_interval not in [1, 7]:
+            raise ValueError(date_interval, 'Invalid date_interval: 1|7')
 
     if SINCE_DATE:
         since_date = datetime.strptime(SINCE_DATE, '%Y-%m-%d')
-    else:
-        # from the first weekday of this week
+    elif date_interval == 7:
+        since_date = since_date + timedelta(days=-since_date.weekday(), weeks=1)
+    else:  # from the first weekday of this week
         today = datetime.now()
         since_date = today + timedelta(days=-today.weekday())
 
@@ -50,7 +59,7 @@ def get_date_range():
     if until_date > datetime.now():
         until_date = datetime.now()
 
-    return since_date, until_date
+    return since_date, until_date, date_interval
 
 
 def crawl_stock_date_chips(company_code, since_date, until_date):
@@ -86,19 +95,15 @@ def crawl_stock_date_chips(company_code, since_date, until_date):
     }
 
 
-def get_stock_chips(company_code, since_date, until_date):
-    mondays = [
-        dt
-        for dt in rrule(
-            WEEKLY,
-            dtstart=since_date,
-            until=until_date,
-            byweekday=[MO],
-        )
-    ]
+def get_stock_chips(company_code, since_date, until_date, date_interval):
 
-    for since in mondays:
-        until = since + timedelta(days=4)
+    dates = [dt for dt in rrule(DAILY, dtstart=since_date, until=until_date)]
+    dates = dates[0:: date_interval]
+
+    for date in dates:
+
+        since = date
+        until = date + timedelta(days=date_interval - 1)
         print(f"date range: {since} ~ {until}")
 
         if until.date() >= datetime.now().date():
@@ -121,7 +126,7 @@ def get_stock_chips(company_code, since_date, until_date):
 
 def main():
 
-    since_date, until_date = get_date_range()
+    since_date, until_date, date_interval = get_date_range()
 
     existed_company_codes = db.list_collection_names(
         filter={"name": {"$regex": "^\\d\\d\\d\\d$"}}
@@ -136,7 +141,7 @@ def main():
             print(f"company_code {company_code} collection already exists, skip")
             continue
 
-        get_stock_chips(company_code, since_date, until_date)
+        get_stock_chips(company_code, since_date, until_date, date_interval)
 
     if UPDATE_EXISTED_COMPANY:
         for existed_code in existed_company_codes:
@@ -146,7 +151,7 @@ def main():
             print(f"until_date: {until_date}")
             print(f"existed_company_code: {existed_code}")
 
-            get_stock_chips(existed_code, since_date, until_date)
+            get_stock_chips(existed_code, since_date, until_date, date_interval)
 
     mongo_client.close()
 
