@@ -129,6 +129,7 @@ def main():
     existed_company_codes = db.list_collection_names(
         filter={"name": {"$regex": "^company_\\d\\d\\d\\d$"}}
     )
+    existed_company_codes = [item.replace('company_', '') for item in existed_company_codes]
 
     # crawl new
     if COMPANY_CODES:
@@ -138,7 +139,7 @@ def main():
             print(f"until_date: {until_date}")
             print(f"company_code: {company_code}")
 
-            if f"company_{company_code}" in existed_company_codes:
+            if company_code in existed_company_codes:
                 print(f"company_code {company_code} collection already exists, skip")
                 continue
 
@@ -147,7 +148,8 @@ def main():
     # update origin
     if UPDATE_EXISTED_COMPANY:
         for existed_code in existed_company_codes:
-            latest_data = db[existed_code].find_one({}, sort=[("sinceDate", -1)])
+            col_name = f'company_{existed_code}'
+            latest_data = db[col_name].find_one({}, sort=[("sinceDate", -1)])
             since_date = latest_data["sinceDate"]
             print(f"since_date: {since_date}")
             print(f"until_date: {until_date}")
