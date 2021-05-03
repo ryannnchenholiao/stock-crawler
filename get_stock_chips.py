@@ -151,7 +151,7 @@ def main():
             print(f"until_date: {until_date}")
             print(f"existed_company_code: {existed_code}")
 
-            get_stock_chips(company_code, since_date, until_date, date_interval)
+            get_stock_chips(existed_code, since_date, until_date, date_interval)
 
     mongo_client.close()
 
