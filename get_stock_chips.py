@@ -99,7 +99,6 @@ def get_stock_chips(company_code, since_date, until_date, date_interval):
 
     dates = [dt for dt in rrule(DAILY, dtstart=since_date, until=until_date)]
     dates = dates[0:: date_interval]
-    print(dates)
 
     for date in dates:
 
